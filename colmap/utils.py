@@ -30,29 +30,51 @@
 # Author: Johannes L. Schoenberger (jsch-at-demuc-dot-de)
 
 from collections import namedtuple
+from dataclasses import dataclass
 import struct
 
 import numpy as np
 
-CameraModel = namedtuple(
-    "CameraModel", ["model_id", "model_name", "num_params"])
+
+CameraModel = namedtuple("CameraModel", [
+    "model_id",
+    "model_name",
+    "num_params"
+])
 
 
-Camera = namedtuple(
-    "Camera", ["id", "model", "width", "height", "params"])
+@dataclass
+class Camera:
+    id: str
+    model: CameraModel
+    width: int
+    height: int
+    params: np.ndarray
 
 
-BaseImage = namedtuple(
-    "Image", ["id", "qvec", "tvec", "camera_id", "name", "xys", "point3D_ids"])
+@dataclass
+class Image:
+    id: str
+    qvec: np.ndarray
+    tvec: np.ndarray
+    camera_id: str
+    name: str
+    path: str
+    xys: np.ndarray
+    point3D_ids: np.ndarray
 
-
-Point3D = namedtuple(
-    "Point3D", ["id", "xyz", "rgb", "error", "image_ids", "point2D_idxs"])
-
-
-class Image(BaseImage):
     def qvec2rotmat(self):
         return qvec2rotmat(self.qvec)
+
+
+# @dataclass
+# class Point3D:
+#     id: str
+#     xyz: Any
+#     rgb: Any
+#     error: Any
+#     image_ids: Any
+#     point2D_idxs: Any
 
 
 CAMERA_MODELS = {
@@ -169,7 +191,7 @@ def read_images_text(path):
                 point3D_ids = np.array(tuple(map(int, elems[2::3])))
                 images[image_id] = Image(
                     id=image_id, qvec=qvec, tvec=tvec,
-                    camera_id=camera_id, name=image_name,
+                    camera_id=camera_id, name=image_name, path=image_name,
                     xys=xys, point3D_ids=point3D_ids)
     return images
 
@@ -204,7 +226,7 @@ def read_images_binary(path_to_model_file):
             point3D_ids = np.array(tuple(map(int, x_y_id_s[2::3])))
             images[image_id] = Image(
                 id=image_id, qvec=qvec, tvec=tvec,
-                camera_id=camera_id, name=image_name,
+                camera_id=camera_id, name=image_name, path=image_name,
                 xys=xys, point3D_ids=point3D_ids)
     return images
 

@@ -1,10 +1,8 @@
-from typing import Tuple, List
-
 import bpy
 import bpy.types as bt
 
 
-def create_camera(name: str, collection: bt.Collection = None) -> Tuple[bt.Object, bt.Camera]:
+def create_camera(name: str, collection: bt.Collection = None) -> tuple[bt.Object, bt.Camera]:
     camera = bpy.data.cameras.new(name)
     object = bpy.data.objects.new(name, camera)
 
@@ -18,11 +16,11 @@ def remove_camera_by_name(name: str):
     bpy.data.cameras.remove(camera)
 
 
-def get_objects_for_camera(camera: bt.Camera) -> List[bt.Object]:
+def get_objects_for_camera(camera: bt.Camera) -> list[bt.Object]:
     return [ obj for obj in bpy.data.objects if obj.type == "CAMERA" and obj.data == camera ]
 
 
-def get_all_camera_objects() -> List[bt.Object]:
+def get_all_camera_objects() -> list[bt.Object]:
     return [ obj for obj in bpy.data.objects if obj.type == "CAMERA" ]
 
 

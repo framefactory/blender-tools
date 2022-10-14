@@ -11,6 +11,7 @@ temp/
 build/
 dist/
 credentials/
+scenes/
 
 # OS
 .DS_Store

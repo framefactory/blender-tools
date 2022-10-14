@@ -13,7 +13,7 @@ class VIEW3D_PT_ff_materializer_world_panel(bt.Panel):
     def draw(self, context: bt.Context):
         col = self.layout.column()
         col.operator("ff_materializer.create_world", icon="ADD")
-        col.operator("script.reload", icon="FILE_REFRESH")
+        col.operator("ff_materializer.reload", icon="FILE_REFRESH")
 
         col = self.layout.column()
         col.use_property_split = True

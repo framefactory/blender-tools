@@ -20,7 +20,7 @@ registered_modules = [
 ]
 
 all_modules = registered_modules + [
-    "ff_tools.node_tools",
+    "ff_tools.core.node_tools",
     "ff_materializer.material_factory",
     "ff_materializer.world_factory",
 ]

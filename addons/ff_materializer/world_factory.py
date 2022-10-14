@@ -3,7 +3,7 @@ from typing import cast, Optional
 import bpy
 from bpy import types as bt
 
-from ff_tools.node_tools import find_node_by_type
+from ff_tools.core.node_tools import find_node_by_type
 
 
 class WorldFactory:

@@ -1,3 +1,3 @@
 # Blender Tools
 
-Useful tools and utilities for Blender scripting.
+Useful add-ons, tools and utilities for Blender scripting.

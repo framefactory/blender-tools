@@ -1,9 +1,23 @@
-# IDEs
-/.vscode
-/.idea
-
 # Python
-__pycache__
+__pycache__/
+venv/
+.venv/
+.tox/
+*.egg-info
+.coverage
+
+# Temp and build
+temp/
+build/
+dist/
+credentials/
 
 # OS
 .DS_Store
+
+# IDEs
+.vscode/*
+.idea/
+
+# Keep
+!.gitkeep

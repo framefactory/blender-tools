@@ -18,6 +18,7 @@ scenes/
 
 # IDEs
 .vscode/*
+*.code-workspace
 .idea/
 
 # Keep

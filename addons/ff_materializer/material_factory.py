@@ -1,5 +1,5 @@
 from typing import Optional
-from dataclasses import dataclass
+from collections import defaultdict
 from zipfile import ZipFile
 import os
 import re
@@ -7,7 +7,9 @@ import re
 import bpy
 from bpy import types as bt
 
-from ff_tools.core.node_tools import find_node_by_type
+from ff_tools.shading import PBRMaterialBuilder
+
+from ff_tools.shading.material import create_node_material, assign_material_to_active
 
 
 _re_type = {
@@ -39,7 +41,7 @@ _resolution_items = {
 }
 
 
-MapFileDict = dict[str, dict[str, str]]
+MapFileDict = defaultdict[str, dict[str, str]]
 EnumItems = list[tuple[str, str, str]]
 
 
@@ -55,18 +57,13 @@ class MaterialFactory:
 
 
     def create_material(self, name: str, context: bt.Context):
-        material = bpy.data.materials.new(name)
-        material.use_nodes = True
-
-        nodes = material.node_tree.nodes
-        links = material.node_tree.links
-
-        bsdf_node = find_node_by_type(nodes, bt.ShaderNodeBsdfPrincipled)
-        if bsdf_node is None:
-            raise RuntimeError("material is missing Principled BSDF node")
+        material = create_node_material(name)
+        builder = PBRMaterialBuilder(material.node_tree)
+        assign_material_to_active(material)
 
 
     def analyze_file_path(self, file_path: str) -> EnumItems:
+        print(f"[MaterialFactory] analyze_file_path: {file_path}")
         _, ext = os.path.splitext(file_path.lower())
 
         if ext == ".zip":
@@ -84,9 +81,9 @@ class MaterialFactory:
         try:
             with ZipFile(file_path, 'r') as zip_file:
                 infos = zip_file.infolist()
-            map_files = self._map_files = {}
+            self._map_files = defaultdict(dict)
             for info in infos:
-                self._find_map_type(info.filename, map_files)
+                self._find_map_type(info.filename, self._map_files)
 
             self._base_name, _ = os.path.splitext(file_path)
         except:
@@ -95,13 +92,14 @@ class MaterialFactory:
 
     @staticmethod
     def _find_map_type(file_name: str, map_dict: MapFileDict):
-        base_name, ext = os.path.splitext(file_name.lower())
+        """Parses the file name for the type and size of the map
+           and adds the information to the given dictionary."""
+        
+        base_name, _ext = os.path.splitext(file_name.lower())
         for map_type, pattern in _re_type.items():
             if pattern.search(base_name):
                 result =_re_resolution.search(base_name)
                 if result:
                     res = result.group(1)
-                    if res not in map_dict:
-                        map_dict[res] = {}
                     map_dict[res][map_type] = file_name
 

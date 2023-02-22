@@ -10,16 +10,6 @@ from .material_factory import MaterialFactory
 from .world_factory import WorldFactory
 
 
-class FF_MATERIALIZER_OP_reload(bt.Operator):
-    bl_idname = "ff_materializer.reload"
-    bl_label = "Reload"
-    bl_description = "Reload add-on"
-
-    def execute(self, context: bt.Context):
-        unregister()
-        register()
-        return {"FINISHED"}
-
 _resolution_items = []
 
 def _get_resolution_items(self, context):
@@ -51,7 +41,8 @@ class FF_MATERIALIZER_OP_create_material(bt.Operator, ImportHelper):
         return False
 
     def execute(self, context: bt.Context):
-        #factory = MaterialFactory(context)
+        self._factory.create_material("Super Material", context)
+
         #factory.open_zip(self.filepath)
         # if factory.get_environment_texture_node() is None:
         #     factory.create_world()
@@ -67,6 +58,8 @@ class FF_MATERIALIZER_OP_create_material(bt.Operator, ImportHelper):
         layout = self.layout
         layout.label(text="Texture Resolution")
         layout.prop(self, "resolution", expand=True)
+
+# ------------------------------------------------------------------------------
 
 class FF_MATERIALIZER_OP_create_world(bt.Operator):
     bl_idname = "ff_materializer.create_world"
@@ -91,14 +84,27 @@ class FF_MATERIALIZER_OP_create_world(bt.Operator):
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
 
+# ------------------------------------------------------------------------------
+
+class FF_MATERIALIZER_OP_reload(bt.Operator):
+    bl_idname = "ff_materializer.reload"
+    bl_label = "Reload"
+    bl_description = "Reload add-on"
+
+    def execute(self, context: bt.Context):
+        unregister()
+        register()
+        return {"FINISHED"}
+
+# ------------------------------------------------------------------------------
 
 def register_module():
-    bpy.utils.register_class(FF_MATERIALIZER_OP_reload)
     bpy.utils.register_class(FF_MATERIALIZER_OP_create_material)
     bpy.utils.register_class(FF_MATERIALIZER_OP_create_world)
+    bpy.utils.register_class(FF_MATERIALIZER_OP_reload)
 
 
 def unregister_module():
+    bpy.utils.unregister_class(FF_MATERIALIZER_OP_reload)
     bpy.utils.unregister_class(FF_MATERIALIZER_OP_create_world)
     bpy.utils.unregister_class(FF_MATERIALIZER_OP_create_material)
-    bpy.utils.unregister_class(FF_MATERIALIZER_OP_reload)

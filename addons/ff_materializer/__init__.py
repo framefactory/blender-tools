@@ -10,7 +10,7 @@ bl_info = {
     "author": "Ralph Wiedemeier",
     "category": "Material",
     "version": (1, 0, 0),
-    "blender": (3, 3, 0)
+    "blender": (3, 4, 0)
 }
 
 registered_modules = [
@@ -20,7 +20,12 @@ registered_modules = [
 ]
 
 all_modules = registered_modules + [
-    "ff_tools.core.node_tools",
+    "ff_tools.core.node",
+    "ff_tools.core.object",
+    "ff_tools.core.scene",    
+    "ff_tools.rendering.camera",
+    "ff_tools.shading.material",
+    "ff_tools.shading.material_builder",
     "ff_materializer.material_factory",
     "ff_materializer.world_factory",
 ]

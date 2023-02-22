@@ -1,3 +1,5 @@
+from typing import cast
+
 import bpy
 from bpy import types as bt
 
@@ -17,7 +19,8 @@ class VIEW3D_PT_ff_materializer_world_panel(bt.Panel):
 
         col = self.layout.column()
         col.use_property_split = True
-        col.prop(context.scene.render, "film_transparent")
+        render_settings = cast(bt.AnyType, context.scene.render)
+        col.prop(render_settings, "film_transparent")
 
 
 def register_module():

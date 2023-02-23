@@ -1,28 +1,29 @@
-import json
-
 import bpy
 from bpy import types as bt
 from bpy import props as bp
 from bpy_extras.io_utils import ImportHelper
 
+from ff_tools.shading.world_builder import IBLWorldBuilder
+
 from . import register, unregister
-from .material_factory import MaterialFactory
-from .world_factory import WorldFactory
+from .material_factory import MaterialFactory, ResolutionEnumItems
 
 
-_resolution_items = []
+resolution_enum_items: ResolutionEnumItems = []
+
 
 def _get_resolution_items(self, context):
-    return _resolution_items 
+    return resolution_enum_items 
+
 
 class FF_MATERIALIZER_OP_create_material(bt.Operator, ImportHelper):
     bl_idname = "ff_materializer.create_material"
     bl_label = "Create Material"
     bl_description = "Import textures and create PBR material"
 
-    filepath: bp.StringProperty(subtype="FILE_PATH")
-    filter_glob: bp.StringProperty(default="*.zip;*.jpg;*.png;*.tif;*.exr")
-    resolution: bp.EnumProperty(name="Resolution", items=_get_resolution_items)
+    filepath: bp.StringProperty(subtype="FILE_PATH") #type:ignore
+    filter_glob: bp.StringProperty(default="*.zip;*.jpg;*.png;*.tif;*.exr;*.webp") #type:ignore
+    resolution: bp.EnumProperty(name="Resolution", items=_get_resolution_items) #type:ignore
 
     def __init__(self):
         super().__init__()
@@ -34,25 +35,20 @@ class FF_MATERIALIZER_OP_create_material(bt.Operator, ImportHelper):
 
     def check(self, _context: bt.Context):
         if self.filepath:
-            global _resolution_items
-            _resolution_items = self._factory.analyze_file_path(self.filepath)
+            global resolution_enum_items
+            self._factory.set_path(self.filepath)
+            resolution_enum_items = self._factory.get_resolution_enum()
+            self._factory.dump()
             return True
 
         return False
 
     def execute(self, context: bt.Context):
-        self._factory.create_material("Super Material", context)
+        resolution = str(self.resolution)
+        tex_path = bpy.path.abspath("//textures")
+        self._factory.create_material(resolution, tex_path)
 
-        #factory.open_zip(self.filepath)
-        # if factory.get_environment_texture_node() is None:
-        #     factory.create_world()
-
-        # factory.load_environment_image(self.filepath)
         return {"FINISHED"}
-
-    # def invoke(self, context: bt.Context, event: bt.Event):
-    #     context.window_manager.fileselect_add(self)
-    #     return {"RUNNING_MODAL"}
 
     def draw(self, _context):
         layout = self.layout
@@ -66,18 +62,17 @@ class FF_MATERIALIZER_OP_create_world(bt.Operator):
     bl_label = "Create World"
     bl_description = "Import environment image and create world"
 
-    filepath: bp.StringProperty(subtype="FILE_PATH")
+    filepath: bp.StringProperty(subtype="FILE_PATH") #type:ignore
 
     @classmethod
-    def poll(cls, context: bt.Context):
-        return WorldFactory.has_active_world(context)
+    def poll(cls, context: bt.Context): #type:ignore
+        return context.scene.world is not None
 
     def execute(self, context: bt.Context):
-        factory = WorldFactory(context)
-        if factory.get_environment_texture_node() is None:
-            factory.create_world()
-
-        factory.load_environment_image(self.filepath)
+        world = context.scene.world
+        world.use_nodes = True
+        builder = IBLWorldBuilder(world.node_tree)
+        builder.load_environment_image(self.filepath)
         return {"FINISHED"}
 
     def invoke(self, context: bt.Context, event: bt.Event):

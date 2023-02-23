@@ -4,6 +4,7 @@ from bpy import types as bt
 
 
 #Nodes = Union[dict[str, bt.Node], list[bt.Node], bt.bpy_prop_collection, bt.Nodes]
+T = TypeVar("T", bound=bt.Node)
 
 
 def find_node_by_type(nodes: bt.Nodes, type: type[bt.Node]) -> Optional[bt.Node]:
@@ -16,14 +17,13 @@ def find_node_by_type(nodes: bt.Nodes, type: type[bt.Node]) -> Optional[bt.Node]
     return None
 
 
-def create_node(nodes: bt.Nodes, type: type[bt.ShaderNode], location: list[int]):
+def create_node(nodes: bt.Nodes, type: type[T], location: list[int]) -> T:
     """Creates a node of the given type at the given location and
        adds it to the given list of nodes."""
-    node = nodes.new(type.__name__)
+    node = cast(T, nodes.new(type.__name__))
     node.location = location
     return node
 
-T = TypeVar("T", bound=bt.Node)
 
 class NodeBuilder:
     """Helper class for adding, grouping, and linking nodes to the

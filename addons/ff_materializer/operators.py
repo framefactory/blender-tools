@@ -35,18 +35,17 @@ class FF_MATERIALIZER_OP_create_material(bt.Operator, ImportHelper):
 
     def check(self, _context: bt.Context):
         if self.filepath:
-            global resolution_enum_items
             self._factory.set_path(self.filepath)
+            global resolution_enum_items
             resolution_enum_items = self._factory.get_resolution_enum()
-            self._factory.dump()
+            #self._factory.dump()
             return True
 
         return False
 
     def execute(self, context: bt.Context):
         resolution = str(self.resolution)
-        tex_path = bpy.path.abspath("//textures")
-        self._factory.create_material(resolution, tex_path)
+        self._factory.create_material(resolution, "//textures")
 
         return {"FINISHED"}
 

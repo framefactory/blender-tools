@@ -34,12 +34,14 @@ class PBRMaterialBuilder(NodeBuilder):
 
         self.tc_node = self.add_node(bt.ShaderNodeTexCoord, [-900, 300])
         self.mapping_node = self.add_node(bt.ShaderNodeMapping, [-700, 300])
+        self.mapping_node.vector_type = 'TEXTURE'
         self.add_link(self.mapping_node.inputs["Vector"], self.tc_node.outputs["UV"])
 
    
     def load_image_map(self, map_type: str, image_path: str):
         """Loads an image from the given path and adds it as a map of the given
            type and links the corresponding nodes."""
+        print(f'[PBRMaterialBuilder.load_image_map] load "{map_type}" from "{image_path}"')
         image = bpy.data.images.load(image_path, check_existing=True)
         self.add_image_map(map_type, image)
 
@@ -50,19 +52,25 @@ class PBRMaterialBuilder(NodeBuilder):
         
         map_node = self.add_node(bt.ShaderNodeTexImage, [-500, self.pos_y])
         map_node.image = image
-        print(image.colorspace_settings.name)
 
         self.add_link(map_node.inputs["Vector"], self.mapping_node.outputs["Vector"])
 
         if map_type == "color":
-            self.add_link(self.bsdf_node.inputs["Base Color"], map_node.outputs["Color"])
+            bc_node = self.add_node(bt.ShaderNodeBrightContrast, [-200, self.pos_y])
+            self.add_link(self.bsdf_node.inputs["Base Color"], bc_node.outputs["Color"])
+            self.add_link(bc_node.inputs["Color"], map_node.outputs["Color"])
 
         elif map_type == "alpha":
             self.add_link(self.bsdf_node.inputs["Alpha"], map_node.outputs["Color"])
 
         elif map_type == "roughness":
             image.colorspace_settings.name = "Non-Color"
-            self.add_link(self.bsdf_node.inputs["Roughness"], map_node.outputs["Color"])
+            math_node = self.add_node(bt.ShaderNodeMath, [-200, self.pos_y])
+            math_node.operation = 'MULTIPLY_ADD'
+            math_node.inputs[1].default_value = 1.0 #type:ignore multiplier
+            math_node.inputs[2].default_value = 0.0 #type:ignore addend
+            self.add_link(self.bsdf_node.inputs["Roughness"], math_node.outputs["Value"])
+            self.add_link(math_node.inputs[0], map_node.outputs["Color"])
         
         elif map_type == "metallic":
             image.colorspace_settings.name = "Non-Color"

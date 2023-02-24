@@ -64,11 +64,21 @@ class MaterialFactory:
  
         maps = self.map_files[resolution]
         if maps:
-            for map_type, image_path in maps.items():
-                if map_type in builder.supported_map_types:
+            for map_type in builder.supported_map_types:
+                if map_type in maps:
+                    # use 16-bit displacement if available (poliigon only)
+                    if map_type == "displacement" and "displacement16" in maps:
+                        map_type = "displacement16"
+
+                    image_path = maps[map_type]
                     if self.is_zipped:
                         image_path = self._extract_file(image_path, maps_path)
-                    builder.load_image_map(map_type, str(image_path))
+
+                    rel_image_path = bpy.path.relpath(image_path)
+                    builder.load_image_map(map_type, rel_image_path)
+
+                    if map_type == "displacement":
+                        material.cycles.displacement_method = 'BOTH'
             
             assign_material_to_active(material)
 
@@ -108,10 +118,11 @@ class MaterialFactory:
     def _extract_file(self, file_path: str, destination_path: str) -> str:
         assert(self.is_zipped)
 
-        Path(destination_path).mkdir(parents=True, exist_ok=True)
+        abs_dest_path = bpy.path.abspath(destination_path)
+        Path(abs_dest_path).mkdir(parents=True, exist_ok=True)
 
         with ZipFile(self.base_path, 'r') as zip_file:
-            dest_path = Path(destination_path).absolute() / Path(file_path).name
+            dest_path = Path(abs_dest_path) / Path(file_path).name
             print(f'[MaterialFactory] extract "{file_path}" to "{dest_path}"')
 
             with zip_file.open(file_path, 'r') as src_file:

@@ -6,7 +6,7 @@ from bpy import types as bt
 
 class VIEW3D_PT_ff_materializer_world_panel(bt.Panel):
     bl_category = "Frame Factory"
-    bl_label = "World Builder"
+    bl_label = "FF World Builder"
     bl_idname = "VIEW3D_PT_ff_materializer_world_panel"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"

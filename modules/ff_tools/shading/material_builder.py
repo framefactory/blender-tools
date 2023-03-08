@@ -46,12 +46,13 @@ class PBRMaterialBuilder(NodeBuilder):
         self.add_image_map(map_type, image)
 
 
-    def add_image_map(self, map_type: str, image: bt.Image):
+    def add_image_map(self, map_type: str, image: bt.Image|None = None):
         """Adds an image map of the given type (color, alpha, roughness, metallic,
            normal, displacement) and links the corresponding nodes."""
         
         map_node = self.add_node(bt.ShaderNodeTexImage, [-500, self.pos_y])
-        map_node.image = image
+        if image is not None:
+            map_node.image = image
 
         self.add_link(map_node.inputs["Vector"], self.mapping_node.outputs["Vector"])
 
@@ -64,7 +65,8 @@ class PBRMaterialBuilder(NodeBuilder):
             self.add_link(self.bsdf_node.inputs["Alpha"], map_node.outputs["Color"])
 
         elif map_type == "roughness":
-            image.colorspace_settings.name = "Non-Color"
+            if image is not None:
+                image.colorspace_settings.name = "Non-Color"
             math_node = self.add_node(bt.ShaderNodeMath, [-200, self.pos_y])
             math_node.operation = 'MULTIPLY_ADD'
             math_node.inputs[1].default_value = 1.0 #type:ignore multiplier
@@ -73,17 +75,20 @@ class PBRMaterialBuilder(NodeBuilder):
             self.add_link(math_node.inputs[0], map_node.outputs["Color"])
         
         elif map_type == "metallic":
-            image.colorspace_settings.name = "Non-Color"
+            if image is not None:
+                image.colorspace_settings.name = "Non-Color"
             self.add_link(self.bsdf_node.inputs["Metallic"], map_node.outputs["Color"])
 
         elif map_type == "normal":
-            image.colorspace_settings.name = "Non-Color"
+            if image is not None:
+                image.colorspace_settings.name = "Non-Color"
             normal_node = self.add_node(bt.ShaderNodeNormalMap, [-200, self.pos_y])
             self.add_link(self.bsdf_node.inputs["Normal"], normal_node.outputs["Normal"])
             self.add_link(normal_node.inputs["Color"], map_node.outputs["Color"])
 
         elif map_type == "displacement":
-            image.colorspace_settings.name = "Non-Color"
+            if image is not None:
+                image.colorspace_settings.name = "Non-Color"
             disp_node = self.add_node(bt.ShaderNodeDisplacement, [-200, self.pos_y])
             self.add_link(self.out_node.inputs["Displacement"], disp_node.outputs["Displacement"])
             self.add_link(disp_node.inputs["Height"], map_node.outputs["Color"])

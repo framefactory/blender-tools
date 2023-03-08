@@ -55,7 +55,19 @@ class MaterialFactory:
         self.is_zipped = False
 
 
-    def create_material(self, resolution: str, maps_path: str):
+    def create_material(self):
+        material = create_node_material(self.base_name)
+        builder = PBRMaterialBuilder(material.node_tree)
+
+        builder.add_image_map("color")
+        builder.add_image_map("roughness")
+        builder.add_image_map("normal")
+        builder.add_image_map("displacement")
+        
+        assign_material_to_active(material)
+
+
+    def import_material(self, resolution: str, maps_path: str):
         if self.map_files is None:
             return
         
@@ -68,9 +80,9 @@ class MaterialFactory:
                 if map_type in maps:
                     # use 16-bit displacement if available (poliigon only)
                     if map_type == "displacement" and "displacement16" in maps:
-                        map_type = "displacement16"
-
-                    image_path = maps[map_type]
+                        image_path = maps["displacement16"]
+                    else:
+                        image_path = maps[map_type]
                     if self.is_zipped:
                         image_path = self._extract_file(image_path, maps_path)
 

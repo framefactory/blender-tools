@@ -15,10 +15,28 @@ resolution_enum_items: ResolutionEnumItems = []
 def _get_resolution_items(self, context):
     return resolution_enum_items 
 
+# ------------------------------------------------------------------------------
 
-class FF_MATERIALIZER_OP_create_material(bt.Operator, ImportHelper):
+class FF_MATERIALIZER_OP_create_material(bt.Operator):
     bl_idname = "ff_materializer.create_material"
     bl_label = "Create Material"
+    bl_description = "Create PBR material"
+
+    @classmethod
+    def poll(cls, context: bt.Context):
+        return True
+
+    def execute(self, context: bt.Context):
+        factory = MaterialFactory()
+        factory.create_material()
+
+        return {"FINISHED"}
+
+# ------------------------------------------------------------------------------
+
+class FF_MATERIALIZER_OP_import_material(bt.Operator, ImportHelper):
+    bl_idname = "ff_materializer.import_material"
+    bl_label = "Import Material"
     bl_description = "Import textures and create PBR material"
 
     filepath: bp.StringProperty(subtype="FILE_PATH") #type:ignore
@@ -45,7 +63,7 @@ class FF_MATERIALIZER_OP_create_material(bt.Operator, ImportHelper):
 
     def execute(self, context: bt.Context):
         resolution = str(self.resolution)
-        self._factory.create_material(resolution, "//textures")
+        self._factory.import_material(resolution, "//textures")
 
         return {"FINISHED"}
 
@@ -94,6 +112,7 @@ class FF_MATERIALIZER_OP_reload(bt.Operator):
 
 def register_module():
     bpy.utils.register_class(FF_MATERIALIZER_OP_create_material)
+    bpy.utils.register_class(FF_MATERIALIZER_OP_import_material)
     bpy.utils.register_class(FF_MATERIALIZER_OP_create_world)
     bpy.utils.register_class(FF_MATERIALIZER_OP_reload)
 
@@ -101,4 +120,5 @@ def register_module():
 def unregister_module():
     bpy.utils.unregister_class(FF_MATERIALIZER_OP_reload)
     bpy.utils.unregister_class(FF_MATERIALIZER_OP_create_world)
+    bpy.utils.unregister_class(FF_MATERIALIZER_OP_import_material)
     bpy.utils.unregister_class(FF_MATERIALIZER_OP_create_material)

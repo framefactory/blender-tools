@@ -56,6 +56,32 @@ def set_background_image(camera: bt.Camera, image: bt.Image) -> bt.CameraBackgro
     bg_image.show_background_image = True
     return bg_image
 
+def ortho_camera_frame_top_down(
+    camera: bt.Object,
+    target: bt.Object,
+) -> list[float, float]:
+    """
+    Adjusts the orthographic camera such that it frames the target object
+    in a top-down view. Returns the target object's size to be used to frame
+    the target object precisely.
+    """
+    cam_data: bt.Camera = camera.data
+    cam_data.type = "ORTHO"
+    cam_data.sensor_fit = "HORIZONTAL"
+
+    # ensure matrices are updated for bounding box calculation
+    bpy.context.evaluated_depsgraph_get()
+    
+    bb = get_bounding_box(target)
+    center = (bb[0] + bb[1]) * 0.5
+    extent = bb[1] - bb[0]
+
+    camera.location = (center.x, center.y, extent.z + 1.0)
+    camera.rotation_euler = (0, 0, 0)
+    cam_data.ortho_scale = extent.x
+
+    return [ extent.x, extent.y ]
+
 def camera_dolly_frame_object(
     camera: bt.Object,
     dolly: bt.Object,

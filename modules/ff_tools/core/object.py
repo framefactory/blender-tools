@@ -15,7 +15,7 @@ def set_object_visibility(obj: bt.Object, visible=True, recursive=True):
     # Recursively process all children
     if recursive:
         for child in obj.children:
-            set_object_visibility(child.name, visible, True)            
+            set_object_visibility(child, visible, True)            
 
 
 def get_objects_by_type(type: str) -> List[bt.Object]:

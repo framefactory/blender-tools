@@ -102,6 +102,7 @@ def camera_dolly_frame_object(
     fov = cam_data.angle
 
     # set camera, dolly, and object rotation
+    camera.location = (0, -1, 0)
     camera.rotation_euler = (radians(90), 0, 0)
     dolly.rotation_euler = (radians(tilt), 0, 0)
     target.rotation_euler = (0, 0, radians(orientation))

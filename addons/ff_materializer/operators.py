@@ -56,7 +56,7 @@ class FF_MATERIALIZER_OP_import_material(bt.Operator, ImportHelper):
             self._factory.set_path(self.filepath)
             global resolution_enum_items
             resolution_enum_items = self._factory.get_resolution_enum()
-            #self._factory.dump()
+            self._factory.dump()
             return True
 
         return False

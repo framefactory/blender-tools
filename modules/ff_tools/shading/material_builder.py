@@ -17,6 +17,7 @@ class PBRMaterialBuilder(NodeBuilder):
         self.supported_map_types = [
             "color",
             "alpha",
+            "occlusion",
             "roughness",
             "metallic",
             "normal",
@@ -47,8 +48,9 @@ class PBRMaterialBuilder(NodeBuilder):
 
 
     def add_image_map(self, map_type: str, image: bt.Image|None = None):
-        """Adds an image map of the given type (color, alpha, roughness, metallic,
-           normal, displacement) and links the corresponding nodes."""
+        """Adds an image map of the given type (color, alpha, occlusion,
+           roughness, metallic, normal, displacement) and links the
+           corresponding nodes."""
         
         map_node = self.add_node(bt.ShaderNodeTexImage, [-500, self.pos_y])
         if image is not None:
@@ -57,14 +59,44 @@ class PBRMaterialBuilder(NodeBuilder):
         self.add_link(map_node.inputs["Vector"], self.mapping_node.outputs["Vector"])
 
         if map_type == "color":
-            bc_node = self.add_node(bt.ShaderNodeBrightContrast, [-200, self.pos_y])
-            self.add_link(self.bsdf_node.inputs["Base Color"], bc_node.outputs["Color"])
-            self.add_link(bc_node.inputs["Color"], map_node.outputs["Color"])
+            map_node.label = "Base Color"
+            bc_node = self.add_node(bt.ShaderNodeBrightContrast, [-200, self.pos_y], label="Adjust Color")
+
+            occ_node = self.find_node_by_label("Occlusion")
+            if occ_node:
+                mix_node = self.add_node(bt.ShaderNodeMixRGB, [-200, occ_node.location[1]])
+                mix_node.blend_type = "MULTIPLY"
+                mix_node.inputs["Fac"].default_value = 1.0 #type:ignore
+                self.add_link(mix_node.inputs["Color1"], bc_node.outputs["Color"])
+                self.add_link(mix_node.inputs["Color2"], occ_node.outputs["Color"])
+                self.add_link(self.bsdf_node.inputs["Base Color"], mix_node.outputs["Color"])
+            else:
+                self.add_link(self.bsdf_node.inputs["Base Color"], bc_node.outputs["Color"])
+                self.add_link(bc_node.inputs["Color"], map_node.outputs["Color"])
 
         elif map_type == "alpha":
+            map_node.label = "Alpha"
             self.add_link(self.bsdf_node.inputs["Alpha"], map_node.outputs["Color"])
 
+        elif map_type == "occlusion":
+            map_node.label = "Occlusion"
+            if image is not None:
+                image.colorspace_settings.name = "Non-Color"
+
+            bc_node = self.find_node_by_label("Adjust Color")
+            if bc_node:
+                mix_node = self.add_node(bt.ShaderNodeMixRGB, [-200, self.pos_y])
+                mix_node.blend_type = "MULTIPLY"
+                mix_node.inputs["Fac"].default_value = 1.0 #type:ignore
+                self.add_link(mix_node.inputs["Color1"], bc_node.outputs["Color"])
+                self.add_link(mix_node.inputs["Color2"], map_node.outputs["Color"])
+                self.add_link(self.bsdf_node.inputs["Base Color"], mix_node.outputs["Color"])
+            else:
+                self.add_link(self.bsdf_node.inputs["Base Color"], map_node.outputs["Color"])
+
+
         elif map_type == "roughness":
+            map_node.label = "Roughness"
             if image is not None:
                 image.colorspace_settings.name = "Non-Color"
             math_node = self.add_node(bt.ShaderNodeMath, [-200, self.pos_y])
@@ -75,11 +107,13 @@ class PBRMaterialBuilder(NodeBuilder):
             self.add_link(math_node.inputs[0], map_node.outputs["Color"])
         
         elif map_type == "metallic":
+            map_node.label = "Metalness"
             if image is not None:
                 image.colorspace_settings.name = "Non-Color"
             self.add_link(self.bsdf_node.inputs["Metallic"], map_node.outputs["Color"])
 
         elif map_type == "normal":
+            map_node.label = "Normal"
             if image is not None:
                 image.colorspace_settings.name = "Non-Color"
             normal_node = self.add_node(bt.ShaderNodeNormalMap, [-200, self.pos_y])
@@ -87,6 +121,8 @@ class PBRMaterialBuilder(NodeBuilder):
             self.add_link(normal_node.inputs["Color"], map_node.outputs["Color"])
 
         elif map_type == "displacement":
+            map_node.label = "Displacement"
+            map_node.interpolation = "Cubic"
             if image is not None:
                 image.colorspace_settings.name = "Non-Color"
             disp_node = self.add_node(bt.ShaderNodeDisplacement, [-200, self.pos_y])

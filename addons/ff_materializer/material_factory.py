@@ -48,6 +48,9 @@ ResolutionEnumItems = list[tuple[str, str, str]]
 
 
 class MaterialFactory:
+    """
+    Factory class for importing and creating PBR materials.
+    """
     def __init__(self):
         self.base_path = ""
         self.base_name = ""
@@ -90,7 +93,7 @@ class MaterialFactory:
                     builder.load_image_map(map_type, rel_image_path)
 
                     if map_type == "displacement":
-                        material.cycles.displacement_method = 'BOTH'
+                        material.cycles.displacement_method = "BOTH"
             
             assign_material_to_active(material)
 
@@ -145,7 +148,16 @@ class MaterialFactory:
 
 
     def _analyze_folder(self, folder_path: Path):
-        self.is_zipped = False
+        try:
+            for file_path in folder_path.iterdir():
+                if file_path.is_file():
+                    self._find_map_type(file_path.name)
+            
+            self.base_name = folder_path.stem
+            self.is_zipped = False
+        except:
+            print(f"[MaterialFactory] failed to analyze folder: {folder_path}")
+
 
 
     def _analyze_zip(self, file_path: Path):
@@ -155,10 +167,10 @@ class MaterialFactory:
             for info in infos:
                 self._find_map_type(info.filename)
 
-            self.base_name = file_path.name.split(".")[0]
+            self.base_name = file_path.stem
             self.is_zipped = True
         except:
-            print(f"[MaterialFactory] failed to analyze {file_path}")
+            print(f"[MaterialFactory] failed to analyze zip file: {file_path}")
 
 
     def _find_map_type(self, file_name: str):
